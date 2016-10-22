@@ -60,9 +60,9 @@ class FCN8VGG:
             # assert green.get_shape().as_list()[1:] == [224, 224, 1]
             # assert blue.get_shape().as_list()[1:] == [224, 224, 1]
             bgr = tf.concat(3, [
-                blue - VGG_MEAN[0],
-                green - VGG_MEAN[1],
-                red - VGG_MEAN[2],
+                blue,
+                green,
+                red,
             ])
 
             if debug:
@@ -136,7 +136,8 @@ class FCN8VGG:
                                              debug=debug, name='upscore32',
                                              ksize=16, stride=8)
 
-        self.pred_up = tf.argmax(self.upscore32, dimension=3)
+        #self.pred_up = tf.argmax(self.upscore32, dimension=3)
+        self.pred_up = self.upscore32
 
     def _max_pool(self, bottom, name, debug):
         pool = tf.nn.max_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1],
