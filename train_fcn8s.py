@@ -66,26 +66,31 @@ with tf.Session() as sess:
     acc = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
     global_step = tf.Variable(0, name='global_step', trainable=False)
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(softmax_loss, global_step=global_step))
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(softmax_loss, global_step=global_step)
     saver = tf.train.Saver()
 
     init = tf.initialize_all_variables()
     sess.run(init)
 
-    step = 1
-    for data in train_dataiter:
-        x = data['data']
-        x = np.rollaxis(x, 1, 4)
-        y = np_utils.to_categorical(data['softmax_label'].flatten().astype(int), 2)
-        y_train = y.reshape(1, 720,720,2)
+    #print('Loading stored model')
+    #saver.restore(sess,'/data/qile/tf_model/my-model-10000')
+    #print('Loading done')
 
-        sess.run(optimizer, feed_dict={images : x, labels: y_train})
-        if(step % 10 == 0):
-            loss, accuracy = sess.run([softmax_loss, acc], feed_dict={images : x, labels: y_train})
-            print "Iter " + str(step*batch_size) + ", Minibatch Loss= " + "{:.6f}".format(loss) + ", Acc = " + "{:.6f}".format(accuracy)
-        if(step % 1000 == 0):
-            saver.save(sess, '/data/qile/tf_model/my-model', global_step=step)
-        step = step + 1
+    step = 1
+    for epoch in range(50):
+        for data in train_dataiter:
+            x = data['data']
+            x = np.rollaxis(x, 1, 4)
+            y = np_utils.to_categorical(data['softmax_label'].flatten().astype(int), 2)
+            y_train = y.reshape(1, 720,720,2)
+
+            sess.run(optimizer, feed_dict={images : x, labels: y_train})
+            if(step % 10 == 0):
+                loss, accuracy = sess.run([softmax_loss, acc], feed_dict={images : x, labels: y_train})
+                print( "Iter " + str(step*batch_size) + ", Minibatch Loss= " + "{:.6f}".format(loss) + ", Acc = " + "{:.6f}".format(accuracy) )
+            if(step % 1000 == 0):
+                saver.save(sess, ('/data/qile/tf_model/%s-scenetext')%(str(epoch)), global_step=step)
+            step = step + 1
     # print('Running the Network')
     # tensors = [vgg_fcn.pred, vgg_fcn.pred_up]
     # down, up = sess.run(tensors, feed_dict=feed_dict)

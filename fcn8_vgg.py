@@ -152,7 +152,7 @@ class FCN8VGG:
     def _conv_layer(self, bottom, name):
         with tf.variable_scope(name) as scope:
             filt = self.get_conv_filter(name)
-            conv = tf.nn.conv2d(bottom, filt, [1, 1, 1, 1], padding='SAME')
+            conv = tf.nn.atrous_conv2d(bottom, filt, 2, padding='SAME')
 
             conv_biases = self.get_bias(name)
             bias = tf.nn.bias_add(conv, conv_biases)
