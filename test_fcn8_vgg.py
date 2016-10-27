@@ -15,8 +15,9 @@ import sys
 import glob
 
 from data import FileIter
-from loss import loss
+from loss import softmaxoutput_loss
 from keras.utils import np_utils
+from PIL import Image
 
 import fcn8_vgg
 import utils
@@ -54,7 +55,7 @@ with tf.Session() as sess:
 
     print 'Loading the Network'
     logits = vgg_fcn.pred_up
-    softmax_loss = loss(logits, labels, 2) 
+    softmax_loss = softmaxoutput_loss(logits, labels, 2) 
     correct_pred = tf.equal(tf.argmax(logits,3), tf.argmax(labels,3))
     acc = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
@@ -65,19 +66,26 @@ with tf.Session() as sess:
     init = tf.initialize_all_variables()
     sess.run(init)
 
-    saver.restore(sess,'/data/qile/tf_model/0my-model-1000')
+    saved_model = '/data/qile/tf_model/5-scenetext-58000'
+    print 'loading model..............' + saved_model
+    saver.restore(sess,saved_model)
 
     imgs = glob.glob('./test_data/*.jpg')
     length = len(imgs)
     count = 0
+    mean = np.array([123.68, 116.779, 103.939])  # (R,G,B)
     for img in imgs:
         count += 1
         print 'processing ...................................%d/%d' %(count, length)
-        img1 = skimage.io.imread(img)
+        img1 = Image.open(img)
+        img1 = np.array(img1, dtype=np.float32)
         if(img1.shape[0] > 2000 or img1.shape[1] > 2000):
-            img1 = skimage.transform.rescale(img1, 0.5)
+            img1 = Image.open(img).resize((img1.shape[1] / 2, img1.shape[0] / 2))
+            img1 = np.array(img1, dtype=np.float32)
         h = img1.shape[1]
         w = img1.shape[0]
+        reshaped_mean = mean.reshape(1, 1, 3)
+        img1 = img1 - reshaped_mean
         img1 = np.expand_dims(img1, axis=0)
         #img1 = np.rollaxis(img1, 1, 4)
 
@@ -89,5 +97,5 @@ with tf.Session() as sess:
         up = tf.nn.softmax(up)
         up = up.eval()[:,1]
         up = up.reshape((w,h))
-        up = up > 0.2
+        up = up > 0.1
         scp.misc.imsave('res/' + img.replace('jpg', 'png')[11:], up)

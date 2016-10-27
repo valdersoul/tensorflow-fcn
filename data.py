@@ -31,10 +31,10 @@ class FileIter(DataIter):
                  cut_off_size = None,
                  data_name = "data",
                  label_name = "softmax_label",
-                 x_name = "_x_label",
-                 y_name = "_y_label",
-                 h_name = "_h_label",
-                 w_name = "_w_label"):
+                 x_name = "t",
+                 y_name = "b",
+                 h_name = "l",
+                 w_name = "r"):
         super(FileIter, self).__init__()
         self.root_dir = root_dir
         self.flist_name = os.path.join(self.root_dir, flist_name)
@@ -43,10 +43,10 @@ class FileIter(DataIter):
 
         self.data_name = data_name
         self.label_name = label_name
-        self.x_name = x_name
-        self.y_name = y_name
-        self.h_name = h_name
-        self.w_name = w_name
+        self.t = x_name
+        self.b = y_name
+        self.l = h_name
+        self.r = w_name
 
         self.num_data = len(open(self.flist_name, 'r').readlines())
         self.f = open(self.flist_name, 'r')
@@ -70,7 +70,7 @@ class FileIter(DataIter):
         y_center = {}
         h = {}
         w = {}
-        data[self.data_name], label[self.label_name], x_center[self.x_name], y_center[self.y_name], h[self.h_name], w[self.w_name] = \
+        data[self.data_name], label[self.label_name], x_center[self.t], y_center[self.b], h[self.l], w[self.r] = \
                 self._read_npz(data_img_name, label_img_name)
         return list(data.items()), list(label.items()), list(x_center.items()), list(y_center.items()), list(h.items()), list(w.items())
 
@@ -82,10 +82,10 @@ class FileIter(DataIter):
 
         npzdata = np.load(npz_name)
         mask = npzdata['img']
-        x_center = npzdata['x_center']
-        y_center = npzdata['y_center']
-        h = npzdata['h']
-        w = npzdata['w']
+        t = npzdata['t']
+        b = npzdata['b']
+        l = npzdata['l']
+        r = npzdata['r']
 
         try:
             # mask = mask.resize((720,720))
@@ -105,11 +105,11 @@ class FileIter(DataIter):
         img = np.expand_dims(img, axis=0)  # (1, c, h, w)
 
         mask = np.expand_dims(np.array(mask), axis=0)
-        x_center = np.expand_dims(np.array(x_center), axis=0)
-        y_center = np.expand_dims(np.array(y_center), axis=0)
-        h = np.expand_dims(np.array(h), axis=0)
-        w = np.expand_dims(np.array(w), axis=0)
-        return img, mask, x_center, y_center, h, w
+        t = np.expand_dims(np.array(t), axis=0)
+        b = np.expand_dims(np.array(b), axis=0)
+        l = np.expand_dims(np.array(l), axis=0)
+        r = np.expand_dims(np.array(r), axis=0)
+        return img, mask, t, b, l, r
 
     def _read_img(self, img_name, label_name):
         img = Image.open(os.path.join(self.root_dir, img_name))
@@ -188,9 +188,9 @@ class FileIter(DataIter):
                 self.iter_next()
             return {self.data_name  :  self.data[0][1],
                     self.label_name :  self.label[0][1],
-                    self.x_name     :  self.x[0][1],
-                    self.y_name     :  self.y[0][1],
-                    self.h_name     :  self.h[0][1],
-                    self.w_name     :  self.w[0][1]}
+                    self.t     :  self.x[0][1],
+                    self.b     :  self.y[0][1],
+                    self.l     :  self.h[0][1],
+                    self.r     :  self.w[0][1]}
         else:
             raise StopIteration
